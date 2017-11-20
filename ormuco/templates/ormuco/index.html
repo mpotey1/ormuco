@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    
+    <title>Ormuco Assessment</title>
+</head>
+<body>
+  <div class="container center-block">
+    <div class="row">
+            <div class="col-md-6">
+        <h4>Please fill the form:</h4>
+        <form action="post" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="exampleInputEmail1">Enter your name: </label>
+          <input type="text" class="form-control" name= "name" placeholder="Name">
+        </div>
+        <div class="form-group">
+          <label for="exampleInputPassword1">Enter your favorite color: </label>
+          <input type="text" class="form-control" placeholder="Color" name="favorite_color">
+        </div>
+        <div class="form-group">
+              <select class="form-control" name="animal">
+            <option value="Cat">Cat</option>
+            <option value="Dog">Dog</option>
+            </select>
+        </div>
+        <input type="submit" class="btn btn-default"></button>
+      </form>
+    </div>
+  </div>
+  </div>
+  <div class="container center-block">
+    <div class="row">
+      <div class="col-md-4">
+      <h4>The stored entries are shown below (if any)</h4>
+      {% if posts %}
+          <ul>
+          {% for post in posts %}
+              <li><a href="/ormuco/{{ post.id }}/">{{ post.name }}</a></li>
+          {% endfor %}
+          </ul>
+      {% else %}
+          <p>No entries are available.</p>
+      {% endif %}
+      </div>
+    </div>
+  </div>
+  </body>
+</html>

@@ -1,0 +1,75 @@
+---
+- hosts: servers
+  vars_files:
+    - vars.yml
+  gather_facts: false
+  become: yes
+
+  tasks:
+    - name: install the latest version of pip on Debian
+      apt: pkg=python-pip state=latest
+
+    - name: install the latest version of gunicorn on Debian
+      apt: pkg=gunicorn state=latest
+
+    - name: install the latest version of nginx on Debian
+      apt: pkg=nginx state=latest
+    - name: Clone/pull project repo
+
+      git: repo={{ project_repo }} force=yes dest={{ install_root }}/{{ project_name }} accept_hostkey=yes
+      notify:
+      - restart gunicorn
+
+    - name: install python packages
+      pip: requirements={{ install_root }}/{{ project_name }}/requirements.txt
+      notify:
+      - restart gunicorn
+
+    - name: django migrate
+      django_manage: command=migrate app_path={{ install_root }}/{{ project_name }} pythonpath={{ pythonpath }}
+
+    - name: copy nginx config
+      template: src=/home/nginx.j2 dest=/etc/nginx/sites-enabled/{{ project_name }}.conf
+      notify:
+      - restart nginx
+
+    - name: copy gunicorn config
+      template: src=/home/gunicorn.j2 dest=/etc/init/gunicorn.conf
+      notify:
+      - restart gunicorn
+
+    - name: copy gunicorn config for Django
+      template: src=/home/django dest=/etc/nginx/sites-enabled/django
+      notify:
+      - restart gunicorn
+
+    - name: remove default nginx site
+      file: path=/etc/nginx/sites-enabled/default state=absent
+    
+    - name: make sure nginx server is running
+      service: name=nginx state=started enabled=yes
+
+    - name: make sure gunicorn server is running
+      service: name=gunicorn state=started enabled=yes
+
+    - name: finish, {{ project_name }} is running in this server
+      command: chdir=/home/ormuco_challenge/django_project/django_project /usr/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 {{ wsgi_module }}:application
+
+
+#    - name: change directory
+#      command: chdir=/home/django/django_project/files ./runserver.sh
+#      args:
+#        warn: no
+
+#    - name: run server
+#      command: ./manage.py runserver 0.0.0.0:8000
+#      args:
+#        warn: no
+
+  handlers:
+    - name: restart nginx
+      service: name=nginx state=restarted
+
+    - name: restart gunicorn
+      service: name=gunicorn state=restarted
+# vim:ft=ansible:
